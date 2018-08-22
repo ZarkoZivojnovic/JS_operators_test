@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Operatori</title>
+    <style>
+        body {
+            background-color: silver;
+        }
+
+        html {
+            box-sizing: border-box;
+        }
+
+        *, *:before, *:after {
+            box-sizing: inherit;
+            margin: auto;
+        }
+
+        .prviRed {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .rezultat {
+            display: inline-block;
+            width: 30%;
+            padding: 20px;
+        }
+
+        .zadatak {
+            display: inline-block;
+            width: 70%;
+            padding: 20px;
+        }
+
+        .resenje {
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .statusbar {
+            width: 400px;
+            height: 20px;
+            border: solid grey 1px;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        #statusTacno, #statusNetacno {
+            width: 0;
+            transition: all 1s;
+            float: left;
+        }
+
+        #statusTacno {
+            background-color: #2b36ff;
+            color: white;
+        }
+
+        #statusNetacno {
+            background-color: red;
+            color: white;
+        }
+
+        #reload {
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+<div class="prviRed">
+    <div class="rezultat">
+        <div class="statusbar">
+            <div id="statusTacno"></div>
+        </div>
+        <div class="statusbar">
+            <div id="statusNetacno"></div>
+        </div>
+        <br>
+        <div id="score"></div>
+        <br><input type="button" id="reset" value="Ponisti brojace">
+    </div>
+    <div class="zadatak">
+        <div id="prikaz"></div>
+        <input type="text" id="unos" title="odgovor"><input type="submit" id="potvrda"> <br><br>
+        <input type="button" id="reload" value="Sledeci zadatak">
+    </div>
+</div>
+<div class="resenje" id="resenje"></div>
+<script>
+    var a, b, c;
+    var tacniOdgovori,
+        netacniOdgovori,
+        ispis = document.getElementById("prikaz"),
+        unos = document.getElementById("unos"),
+        potvrda = document.getElementById("potvrda"),
+        sledeciZadatak = document.getElementById("reload"),
+        resetujCounter = document.getElementById("reset"),
+        resenje = document.getElementById("resenje"),
+        statusTacno = document.getElementById("statusTacno"),
+        statusNetacno = document.getElementById("statusNetacno");
+
+    var deloviSintakse = {
+        operatori: ["+", "-", "*", "/", "%"],
+        operatoriSkraceno: ["++", "--", "*=", "/=", "+=", "-=", "%="]
+    };
+
+    if (localStorage.getItem("Tacni") === null && localStorage.getItem("Netacni") === null) {
+        tacniOdgovori = 0;
+        netacniOdgovori = 0;
+        localStorage.setItem("Tacni", tacniOdgovori);
+        localStorage.setItem("Netacni", netacniOdgovori);
+    } else {
+        tacniOdgovori = localStorage.getItem("Tacni");
+        netacniOdgovori = localStorage.getItem("Netacni");
+        updejtujStatusBar();
+    }
+
+    document.getElementById("score").innerHTML = "Tacni odgovori = " + tacniOdgovori + "<br>" +
+        "Netacni odgovori = " + netacniOdgovori + "<br>";
+
+    sledeciZadatak.addEventListener("click", function () {
+        location.reload();
+    });
+    resetujCounter.addEventListener("click", function () {
+        tacniOdgovori = 0;
+        netacniOdgovori = 0;
+        updejtujStatusBar();
+        setTimeout(function () {
+            location.reload();
+        }, 1500)
+    });
+
+    if (tacniOdgovori < 3) {
+        operatoriLevelOne();
+    } else if (tacniOdgovori < 6) {
+        operatoriLevelTwo();
+    } else if (tacniOdgovori < 9) {
+        operatoriLevelTree();
+    } else if (tacniOdgovori < 15) {
+        operatoriLevelFour();
+    } else if (tacniOdgovori == 15) {
+        ispis.innerHTML = "Ponisti brojace odgovora da bi poceo iz pocetka!"
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function operatoriLevelOne() {
+        var operacija = randomObjectElements(deloviSintakse.operatori, 1);
+        var a = randomNumbers(10, 20);
+        var b = randomNumbers(1, 10);
+        var racunanje = eval(a + operacija + b);
+        while (racunanje != Math.round(racunanje)) {
+            operacija = randomObjectElements(deloviSintakse.operatori, 1);
+            a = randomNumbers(10, 20);
+            b = randomNumbers(1, 10);
+            racunanje = eval(a + operacija + b);
+        }
+        ispis.innerHTML = "Koji bi ispis u konzoli bio za console.log( a " + operacija + " b );<br>" +
+            "ako je: <br>" +
+            "var a = " + a + ";<br>" +
+            "var b = " + b + ";<br>";
+
+        proveraResenja(racunanje);
+        console.log(a, operacija, b);
+        console.log(eval(a + operacija + b));
+    }
+
+    function operatoriLevelTwo() {
+        var a = parseInt(randomNumbers(1, 15));
+        var b = parseInt(randomNumbers(1, 15));
+        var operacija = randomObjectElements(deloviSintakse.operatoriSkraceno, 1);
+        var resenje;
+        var tekstZadatkaSaJednomPromenljivom = "Koju ce vrednost imati var a posle operacije a" + operacija + " ;<br>" +
+            "ako je: <br>" +
+            "var a = " + a;
+        var tekstZaDeljenjeIOstatak = "Koju ce vrednost imati var a posle operacije a" + operacija + "b ;<br>" +
+            "ako je: <br>" +
+            "var a = " + b + ";<br>" +
+            "var b = " + a;
+        ispis.innerHTML = "Koju ce vrednost imati var a posle operacije a" + operacija + "b ;<br>" +
+            "ako je: <br>" +
+            "var a = " + a + ";<br>" +
+            "var b = " + b;
+        console.log(a, operacija, b);
+        if (operacija === deloviSintakse.operatoriSkraceno[0]) {
+            resenje = eval(a + 1);
+            ispis.innerHTML = tekstZadatkaSaJednomPromenljivom;
+        } else if (operacija === deloviSintakse.operatoriSkraceno[1]) {
+            resenje = eval(a - 1);
+            ispis.innerHTML = tekstZadatkaSaJednomPromenljivom;
+        } else if (operacija === deloviSintakse.operatoriSkraceno[2]) {
+            resenje = eval(a * b);
+        } else if (operacija === deloviSintakse.operatoriSkraceno[3]) {
+            resenje = eval(a / b);
+            if (a < b) {
+                ispis.innerHTML = tekstZaDeljenjeIOstatak;
+                resenje = eval(b / a);
+            }
+        } else if (operacija === deloviSintakse.operatoriSkraceno[4]) {
+            resenje = eval(a + b);
+        } else if (operacija === deloviSintakse.operatoriSkraceno[5]) {
+            resenje = eval(a - b);
+        } else if (operacija === deloviSintakse.operatoriSkraceno[6]) {
+            resenje = eval(a % b);
+            if (a < b) {
+                ispis.innerHTML = tekstZaDeljenjeIOstatak;
+                resenje = eval(b % a);
+            }
+        }
+        if (Number.isInteger(resenje)) {
+            proveraResenja(resenje);
+            console.log(a, operacija, b);
+            console.log(eval(resenje));
+        } else {
+            operatoriLevelTwo();
+        }
+    }
+
+    function operatoriLevelTree() {
+        var stringIliNe = randomNumbers(1, 6);
+        var a = parseInt(randomNumbers(1, 5));
+        var b = parseInt(randomNumbers(1, 10));
+        var c = parseInt(randomNumbers(1, 5));
+        ispis.innerHTML = "Koji bi ispis u konzoli bio za console.log( a + b + c );<br>" +
+            "ako je: <br>" +
+            "var a = " + a + ";<br>";
+        if (stringIliNe % 2 === 0) {
+            b = b.toString();
+            ispis.innerHTML += "var b = \"" + b + "\";<br>var c = " + c + ";<br>";
+            proveraResenja((a + b) + c);
+            console.log((a + b) + c);
+        } else {
+            c = c.toString();
+            ispis.innerHTML += "var b = " + b + ";<br>var c = \"" + c.toString() + "\";<br>";
+            proveraResenja(a + b + c);
+            console.log(a + b + c);
+        }
+    }
+
+    function operatoriLevelFour() {
+        var operacija1 = randomObjectElements(deloviSintakse.operatori, 1);
+        var operacija2 = randomObjectElements(deloviSintakse.operatori, 1);
+        var operacija3 = randomObjectElements(deloviSintakse.operatori, 1);
+        var a = randomNumbers(11, 20),
+            b = randomNumbers(1, 10),
+            c = (a + operacija3 + b);
+        var racunanje = eval(a + operacija1 + b + operacija2 + c);
+
+        while (racunanje != Math.round(racunanje)) {
+            a = 15;
+            b = 5;
+            c = (a + operacija3 + b);
+            operacija1 = randomObjectElements(deloviSintakse.operatori, 1);
+            operacija2 = randomObjectElements(deloviSintakse.operatori, 1);
+            racunanje = eval(a + operacija1 + b + operacija2 + c);
+        }
+
+        ispis.innerHTML = "Koji bi ispis u konzoli bio za console.log( a " + operacija1 + " b " + operacija2 + " c );<br>" +
+            "ako je: <br>" +
+            "var a = " + a + ";<br>" +
+            "var b = " + b + ";<br>" +
+            "var c = a " + operacija3 + " b;";
+
+        proveraResenja(racunanje);
+
+        console.log(a, operacija1, b, operacija2, c);
+        console.log(eval(a + operacija1 + b + operacija2 + c));
+    }
+
+    function proveraResenja(racunanje) {
+        potvrda.addEventListener("click", kalkulacijaOdgovora);
+
+        function kalkulacijaOdgovora() {
+            if (unos.value == racunanje) {
+                resenje.innerHTML += "<br>Odgovor je tacan!";
+                tacniOdgovori++;
+            } else {
+                resenje.innerHTML += "<br>Odgovor nije tacan! Resenje je " + Math.round(racunanje) + ".";
+                netacniOdgovori++;
+            }
+            potvrda.removeEventListener("click", kalkulacijaOdgovora);
+            updejtujStatusBar();
+            document.getElementById("score").innerHTML = "Tacni odgovori = " + tacniOdgovori + "<br>" +
+                "Netacni odgovori = " + netacniOdgovori + "<br>";
+
+            prikaziIliSakrij(sledeciZadatak, "visible");
+        }
+    }
+
+    function randomNumbers(start, end, count) {
+        if (typeof count == "undefined") {
+            count = 1
+        }
+        end++;
+        var returnArray = [],
+            randomNumber;
+        for (var i = 0; i < count; i++) {
+            randomNumber = Math.floor(Math.random() * (end - start)) + start;
+            if (returnArray.indexOf(randomNumber) == -1) {
+                returnArray.push(randomNumber);
+            } else {
+                --i;
+            }
+        }
+        return returnArray;
+    }
+
+    function randomObjectElements(obj, count) {
+        var tmpArray = [],
+            returnObject = {};
+        for (var key in obj) {
+            tmpArray.push(key);
+        }
+        var randomElements = randomNumbers(0, tmpArray.length - 1, count);
+        for (var randomArrayElement in randomElements) {
+            var objectKey = tmpArray[randomElements[randomArrayElement]];
+            returnObject[objectKey] = obj[objectKey];
+        }
+        return obj[objectKey];
+    }
+
+    function updejtujStatusBar() {
+        statusTacno.style.width = (tacniOdgovori * 6.66) + "%";
+        statusTacno.textContent = " " + tacniOdgovori;
+        statusNetacno.style.width = (netacniOdgovori * 33) + "%";
+        statusNetacno.textContent = " " + netacniOdgovori;
+        if (netacniOdgovori == 3) {
+            tacniOdgovori--;
+            netacniOdgovori = 0;
+            setTimeout(function () {
+                statusNetacno.style.width = (netacniOdgovori * 33) + "%";
+                statusNetacno.textContent = " " + netacniOdgovori;
+                statusTacno.style.width = (tacniOdgovori * 6.66) + "%";
+                statusTacno.textContent = " " + tacniOdgovori;
+            }, 1500);
+        }
+        localStorage.setItem("Tacni", tacniOdgovori);
+        localStorage.setItem("Netacni", netacniOdgovori);
+    }
+
+    function prikaziIliSakrij(element, opcija) {
+        element.style.visibility = opcija;
+    }
+
+</script>
+</body>
+</html>
